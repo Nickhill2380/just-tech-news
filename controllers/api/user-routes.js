@@ -1,5 +1,4 @@
 const router = require('express').Router();
-const { response } = require('express');
 const { User, Post, Comment, Vote } = require('../../models');
 
 // get all users
@@ -66,10 +65,14 @@ router.post('/', (req, res) => {
         req.session.user_id = dbUserData.id;
         req.session.username = dbUserData.username;
         req.session.loggedIn = true;
-
-        res.json(dbUserData)
+  
+        res.json(dbUserData);
       });
     })
+    .catch(err => {
+      console.log(err);
+      res.status(500).json(err);
+    });
 });
 
 router.post('/login', (req, res) => {
@@ -92,14 +95,24 @@ router.post('/login', (req, res) => {
     }
 
     req.session.save(() => {
-      // declare session variables
       req.session.user_id = dbUserData.id;
       req.session.username = dbUserData.username;
       req.session.loggedIn = true;
-    
-    res.json({ user: dbUserData, message: 'You are now logged in!' });
+  
+      res.json({ user: dbUserData, message: 'You are now logged in!' });
+    });
   });
-  });
+});
+
+router.post('/logout', (req, res) => {
+  if (req.session.loggedIn) {
+    req.session.destroy(() => {
+      res.status(204).end();
+    });
+  }
+  else {
+    res.status(404).end();
+  }
 });
 
 router.put('/:id', (req, res) => {
@@ -142,17 +155,6 @@ router.delete('/:id', (req, res) => {
       console.log(err);
       res.status(500).json(err);
     });
-});
-
-router.post('/logout', (req,res) => {
-  if(req.session.loggedIn) {
-    req.session.destroy(() => {
-      res.status(204).end();
-    });
-  }
-  else {
-    res.status(404).end();
-  }
 });
 
 module.exports = router;
